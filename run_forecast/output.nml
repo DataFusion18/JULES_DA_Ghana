@@ -1,0 +1,30 @@
+
+&JULES_OUTPUT
+run_id= 'posterior',,
+output_dir= 'output',,
+nprofiles=    2,,
+/
+
+&JULES_OUTPUT_PROFILE
+profile_name=    'outvars',,
+file_period=    0,,
+output_spinup=    F,,
+output_main_run=    T,  ,
+output_period=    86400,,
+nvars=    2,,
+var=    'smcl' 'rainfall',,
+output_type=    'M'  'M',,
+/
+
+&JULES_OUTPUT_PROFILE
+profile_name=    'soildrive',,
+file_period=    0,,
+output_spinup=    F,,
+output_main_run=    T,  ,
+output_period=    -1,,
+nvars=    9,,
+var=  'b' 'hcap' 'hcon' 'satcon' 'sathh' 'sm_crit' 'sm_sat' 'sm_wilt' 'frac',,
+output_type=    'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M' 'M',,
+/
+
+

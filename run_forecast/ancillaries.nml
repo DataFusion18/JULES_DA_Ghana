@@ -1,0 +1,30 @@
+
+&jules_frac
+file=   'vegfrac.regional.nc',,
+frac_name=   'field1391',,
+/
+
+&jules_soil_props
+const_z=   T,,
+file= 'soil.regional.nc',
+nvars= 9,
+var=      'b'     'sathh'    'satcon'   'sm_sat'   'sm_crit'  'sm_wilt'   'hcap'     'hcon'    'albsoil',
+var_name= 'field1381' 'field342' 'field333' 'field332' 'field330' 'field329' 'field335' 'field336' 'field1395'
+/
+
+&jules_top
+const_val=   1.0,6.0,2.0,,
+nvars=   3,,
+use_file=   .false.,.false.,.false.,,
+var=   'fexp','ti_mean','ti_sig',,
+/
+
+&jules_agric
+zero_agric=  T,,
+/
+
+&jules_co2
+co2_mmr=   5.94100e-4,,
+/
+
+

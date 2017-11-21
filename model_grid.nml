@@ -1,0 +1,36 @@
+
+&jules_input_grid
+nx=    10,,
+ny=    15,,
+x_dim_name=    'lon', ,
+y_dim_name=    'lat', ,
+time_dim_name=    'tstep', ,
+type_dim_name=    'z', ,
+soil_dim_name=    'z',,
+pft_dim_name=    'z',,
+/
+
+&jules_latlon
+file=    'lonlat.regional.nc',,
+lat_name=    'latitude',,
+lon_name=    'longitude',,
+/
+
+&jules_land_frac
+file=    'landfrac.regional.nc',,
+land_frac_name=    'lsmask',,
+/
+
+&jules_model_grid
+land_only=    F,,
+use_subgrid=    T,,
+latlon_region=    T,,
+lat_bounds= 9.5,10.0,,
+lon_bounds= -3.5,-3.0,,
+/
+
+&jules_surf_hgt
+zero_height=   .true.,,
+/
+
+

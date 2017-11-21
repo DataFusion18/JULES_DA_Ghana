@@ -1,0 +1,13 @@
+
+&jules_initial
+const_val=   0.0,276.78,12.1,0.0,0.9,278.0,0.0,,
+dump_file=   .false.,,
+file=   'data/initial_conditions.dat',,
+nvars=   7,,
+total_snow=   .true.,,
+use_file=   7*.false.,,
+var=   'canopy','tstar_tile','cs','gs','sthuf','t_soil','snow_tile',,
+var_name=   '',,
+/
+
+
