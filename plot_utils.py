@@ -117,6 +117,22 @@ def rmse(obs, mod, err):
     return rmse
 
 
+def ubrmse(obs, mod, err):
+    """
+    Calculates the RMSE weight by observation std
+    :param obs: observations
+    :param mod: modelled observations
+    :param err: observation error
+    :return: weighted RMSE
+    """
+    obs2 = obs[np.logical_not(np.isnan(obs))]
+    mod2 = mod[np.logical_not(np.isnan(obs))]
+    err2 = err[np.logical_not(np.isnan(obs))]
+    innov = [((mod2[i] - np.mean(mod2)) - (obs2[i] - np.mean(obs2)))**2 for i in xrange(len(obs2))]
+    rmse = np.sqrt(np.sum(innov) / len(obs2))
+    return rmse
+
+
 def nrmse(obs, mod, err):
     """
     Calculates the RMSE weight by observation mean
@@ -193,7 +209,8 @@ def corr_coeff(obs, mod, err):
     obs2 = obs[np.logical_not(np.isnan(obs))]
     mod2 = mod[np.logical_not(np.isnan(obs))]
     err2 = err[np.logical_not(np.isnan(obs))]
-    corrc = sp.stats.linregress(obs2, mod2)[2]
+    # corrc = sp.stats.linregress(obs2, mod2)[2]
+    corrc = np.corrcoef(obs2, mod2)[0,1]
     return corrc
 
 
@@ -206,7 +223,7 @@ def flat_rmse(obs, mod, err, fn_key='rmse'):
     :return: weight RMSE array
     """
     fn_dict = {'rmse': rmse, 'nrmse': nrmse, 'weighted': weighted_rmse, 'hxy': hxy, 'hxy_err': hxy_err, 'mae': mae,
-               'corr_coeff': corr_coeff}
+               'corr_coeff': corr_coeff, 'ubrmse': ubrmse}
     ret_val = fn_dict[fn_key](obs, mod, err)
     return ret_val
 
@@ -220,7 +237,7 @@ def map_rmse(obs, mod, err, fn_key='rmse'):
     :return: weight RMSE array
     """
     fn_dict = {'rmse': rmse, 'nrmse': nrmse, 'weighted': weighted_rmse, 'hxy': hxy, 'hxy_err': hxy_err, 'mae': mae,
-               'corr_coeff': corr_coeff}
+               'corr_coeff': corr_coeff, 'ubrmse': ubrmse}
     rmse_arr = np.empty_like(mod[0])
     for xy in itt.product(np.arange(rmse_arr.shape[0]), np.arange(rmse_arr.shape[1])):
         rmse_arr[xy[0], xy[1]] = fn_dict[fn_key](obs[:, xy[0], xy[1]], mod[:, xy[0], xy[1]], err[:, xy[0], xy[1]])

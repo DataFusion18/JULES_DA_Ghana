@@ -64,7 +64,7 @@ class Jules_DA:
         self.hcon = self.soil_dat.variables['field336'][self.lat_idx, self.lon_idx]
         self.albsoil = self.soil_dat.variables['field1395'][self.lat_idx, self.lon_idx]
         self.xb = ssc.calc_SandSilt(self.b, self.sm_sat)  # inital guess to 2 optimised parameters
-        self.prior_err = 0.07*self.xb  # previously 0.05
+        self.prior_err = 0.05*self.xb  # previously 0.05
         # Set output dirctory
         self.output_dir = "output/"
         self.steps = []
@@ -121,6 +121,8 @@ class Jules_DA:
         """
         sand = x0[0]
         silt = x0[1]
+        if silt > 60.0:
+            return 1e16
         soil_params = ssc.calc_SoilParam(sand, silt)
         self.b = soil_params[0]
         self.sathh = soil_params[1]

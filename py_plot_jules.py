@@ -193,6 +193,14 @@ class PlotJules:
         cs = m.imshow(arr, cmap=colormap, interpolation='None', vmin=v_min, vmax=v_max)
         return ax, cs, m
 
+    def map_plt_025(self, arr, colormap='OrRd', ax=None, v_min=None, v_max=None):
+        # draw map
+        arr[arr < -900] = np.nan
+        m = plt_ut.draw_map(low_lat=4.625-0.125, high_lat=11.875+0.125, low_lon=-3.375-0.125,
+                            high_lon=1.375+0.125, ax=ax)
+        cs = m.imshow(arr, cmap=colormap, interpolation='None', vmin=v_min, vmax=v_max)
+        return ax, cs, m
+
     def map_smcl(self, modelled_sm, times, t_step):
         """
         Plots a map of error between CCI obs and JULES for either prior or posterior
@@ -330,6 +338,67 @@ class PlotJules:
         ax.plot(idx_date.keys(), idx_date.values(), line_type, color=self.palette[palet], label=lab)
         return ret_val
 
+    def season_err_mnth(self, model_sm, axes=None, palet=0, lab='prior', fn_key='rmse', subset=None, line_type='-'):
+        date_lst = []
+        val_lst = []
+        if axes is not None:
+            ax = axes
+            ret_val = ax, date_lst
+        else:
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+            ret_val = fig, ax
+        if subset == 'north':
+            cci_sm = self.cci_sm[:, 10:, :-1]
+            model_sm = model_sm[:, 10:, :-1]
+            cci_sm_err = self.cci_sm_err[:, 10:, :-1]
+        elif subset == 'south':
+            cci_sm = self.cci_sm[:, :10, :-1]
+            model_sm = model_sm[:, :10, :-1]
+            cci_sm_err = self.cci_sm_err[:, :10, :-1]
+        else:
+            cci_sm = self.cci_sm[:]
+            model_sm = model_sm[:]
+            cci_sm_err = self.cci_sm_err[:]
+        for yr in self.years[:]:
+            for mnth in np.arange(1,13,1):
+                if mnth in np.arange(1,12,1).tolist():
+                    t_idx = np.where([self.times[x] in per_delta(dt.datetime(yr, mnth, 1),
+                        dt.datetime(yr, mnth+1, 1) - dt.timedelta(days=1)) for x in xrange(len(self.times))])[0]
+                else:
+                    t_idx = np.where([self.times[x] in per_delta(dt.datetime(yr, mnth, 1), dt.datetime(yr, mnth, 30))
+                                      for x in xrange(len(self.times))])[0]
+                date_lst.append(dt.datetime(yr,mnth,1))
+                val_lst.append(np.nanmean(plt_ut.map_rmse(cci_sm[t_idx], model_sm[t_idx], cci_sm_err[t_idx],
+                                          fn_key=fn_key)))
+        ax.plot(date_lst, val_lst, line_type, color=self.palette[palet], label=lab)
+        return ret_val
+
+    def mnth_err_subplot(self, prior_t2, posterior_t2, prior_t3, posterior_t3, title=None,
+                           fn_key='rmse', subset=None, axes='None'):
+        if axes == 'None':
+            fig, ax = plt.subplots(nrows=1, ncols=1,)
+            ret_val = fig
+        else:
+            ax = axes
+            ret_val = ax
+        ax, date_lst = self.season_err_mnth(prior_t2, axes=ax, palet=3, lab='T2 no DA', fn_key=fn_key,
+                                       subset=subset, line_type='--')
+        ax, date_lst = self.season_err_mnth(posterior_t2, axes=ax, palet=7, lab='T2 DA',
+                                       fn_key=fn_key, subset=subset, line_type='--')
+        ax, date_lst = self.season_err_mnth(prior_t3, axes=ax, palet=3, lab ='T3 no DA', fn_key=fn_key,
+                                       subset=subset)
+        ax, date_lst = self.season_err_mnth(posterior_t3, axes=ax, palet=7, lab='T3 DA',
+                                       fn_key=fn_key, subset=subset)
+        ax.legend(loc=0, frameon=1, prop={'size': 11})
+        ax.set_xlim([date_lst[0], date_lst[-1]])
+        ax.set_ylim([0.0, 0.09])
+        ax.set_xticks(np.arange(date_lst[0], date_lst[-1]))
+        #ax.set_xticklabels([str(yr) for yr in idx_date.keys()])
+        ax.set_title(title)
+        ax.set_xlabel('Year')
+        ax.set_ylabel(r'Soil Moisture ubRMSE (m$^3$ m$^{-3}$)')
+        return ret_val
+
     def season_err_subplot(self, prior_t2, posterior_t2, prior_t3, posterior_t3, wd='wet', title=None,
                            fn_key='rmse', subset=None, axes='None'):
         if axes == 'None':
@@ -348,34 +417,65 @@ class PlotJules:
                                        fn_key=fn_key, subset=subset)
         ax.legend(loc=0, frameon=1, prop={'size': 11})
         ax.set_xlim([idx_date.keys()[0], idx_date.keys()[-1]])
-        ax.set_ylim([0.0, 0.12])
+        ax.set_ylim([0.0, 0.06])
         ax.set_xticks(np.arange(idx_date.keys()[0], idx_date.keys()[-1]+1))
         ax.set_xticklabels([str(yr) for yr in idx_date.keys()])
         ax.set_title(title)
         ax.set_xlabel('Year')
-        ax.set_ylabel(r'Soil Moisture RMSE (m$^3$ m$^{-3}$)')
+        ax.set_ylabel(r'Soil Moisture ubRMSE (m$^3$ m$^{-3}$)')
         return ret_val
 
     def seas_err_subsubplot(self, prior_t2, posterior_t2, prior_t3, posterior_t3):
         fig, ax = plt.subplots(nrows=2, ncols=2,)
         ax1 = self.season_err_subplot(prior_t2, posterior_t2, prior_t3, posterior_t3, wd='wet', title='',
-                           fn_key='rmse', subset='north', axes=ax[0, 0])
+                           fn_key='ubrmse', subset='north', axes=ax[0, 0])
         #ax[0,0].set_ylabel(r'Prior')
         #ax[0, 0].set_title(r'Sand')
         ax2 = self.season_err_subplot(prior_t2, posterior_t2, prior_t3, posterior_t3, wd='dry', title='',
-                           fn_key='rmse', subset='north', axes=ax[0, 1])
+                           fn_key='ubrmse', subset='north', axes=ax[0, 1])
         #ax[0, 1].set_title(r'Silt')
         ax3 = self.season_err_subplot(prior_t2, posterior_t2, prior_t3, posterior_t3, wd='wet', title='',
-                           fn_key='rmse', subset='south', axes=ax[1, 0])
+                           fn_key='ubrmse', subset='south', axes=ax[1, 0])
         #ax[0, 2].set_title(r'Clay')
         ax4 = self.season_err_subplot(prior_t2, posterior_t2, prior_t3, posterior_t3, wd='dry', title='',
-                           fn_key='rmse', subset='south', axes=ax[1, 1])
+                           fn_key='ubrmse', subset='south', axes=ax[1, 1])
 
         #fig.subplots_adjust(right=0.8)
         #fig.subplots_adjust(vspace=.5)
         #plt.suptitle('Comparison of prior and posterior soil maps', fontsize=20)
         #fig.subplots_adjust(wspace= 0.15, hspace=0.001)
         return fig
+
+    def no_obs_map(self, arr):
+        fig, ax = plt.subplots(nrows=1, ncols=1)
+        len_obs = len(arr)
+        print len_obs
+        no_obs = np.empty_like(arr[0])
+        for xy in itt.product(np.arange(no_obs.shape[0]), np.arange(no_obs.shape[1])):
+            no_obs[xy[0], xy[1]] = len([x for x in arr[:, xy[0], xy[1]] if not np.isnan(x)])
+
+        ax, cs, m = self.map_plt(no_obs, colormap='GnBu', ax=ax, v_min=0.0, v_max=len_obs)
+        # add colorbar.
+        ret_val = fig, ax
+        cbar = m.colorbar(cs, location='right', pad="12%")
+        cbar.set_label('Number of available observations')
+        return ret_val
+
+    def soil(self, soil_map, ssc='sand', axes=None):
+        if axes is not None:
+            ax = axes
+        elif axes is None:
+            fig, ax = plt.subplots(nrows=1, ncols=1)
+        soil_dat = nc.Dataset(soil_map, 'r')
+        b = soil_dat.variables['field1381'][self.lat_idx1:self.lat_idx2+1, self.lon_idx1:self.lon_idx2+1]
+        print b.shape
+        sm_sat = soil_dat.variables['field332'][self.lat_idx1:self.lat_idx2+1, self.lon_idx1:self.lon_idx2+1]
+        print sm_sat.shape
+        soil = np.empty_like(b)
+        for xy in itt.product(np.arange(soil.shape[0]), np.arange(soil.shape[1])):
+            soil[xy[0], xy[1]] = calc_soil.calc_SandSiltClay(b[xy[0], xy[1]], sm_sat[xy[0], xy[1]], ssc=ssc)
+        soil = soil * (np.nanmean(self.cci_sm, axis=0)/np.nanmean(self.cci_sm, axis=0))
+        return soil
 
     def soil_map(self, soil_map, ssc='sand', axes=None):
         if axes is not None:
